@@ -10,11 +10,11 @@ import org.htmlparser.NodeFilter;
 import org.htmlparser.Parser;
 import org.htmlparser.filters.AndFilter;
 import org.htmlparser.filters.NodeClassFilter;
-import org.htmlparser.filters.OrFilter;
+import org.htmlparser.tags.LinkTag;
+import org.htmlparser.tags.TableColumn;
 import org.htmlparser.tags.TableTag;
 import org.htmlparser.util.NodeList;
-import org.htmlparser.util.ParserException;
-import org.htmlparser.visitors.TextExtractingVisitor;;
+import org.htmlparser.util.ParserException;;
 
 public class ParseHtml {
 
@@ -47,7 +47,6 @@ public class ParseHtml {
     public static void main(String[] args) {
 
         String htmlText = openFile("Kongo.html");
-        System.out.println("2");
         try {
             Parser parser = Parser.createParser(htmlText, ENCODE);
 
@@ -74,26 +73,85 @@ public class ParseHtml {
 
             NodeList tables = parser.extractAllNodesThatMatch(tableFilter);
 
-            for (int i = 0; i < tables.size(); i++) {
-                Node node = tables.elementAt(0);
+            kanShip ship = new kanShip();
+            SoundFileds lastFileds = null;
+            if (tables != null && tables.size() > 1) {
+                Node soundNode = tables.elementAt(1);
 
-                // node.ge
-                // System.out.println(parentText);
+                if (soundNode.getChildren() instanceof NodeList) {
+                    NodeList lists = (NodeList) soundNode.getChildren();
+                    int size = lists.size();
+                    for (int i = 1; i < size; i = i + 2) {
+                        if (i == 1) {
+                            continue;
+                        }
+                        Node node = lists.elementAt(i);
+                        if (node.getChildren() instanceof NodeList) {
+                            NodeList slists = (NodeList) node.getChildren();
+                            // System.out.println("slists = " + slists);
+                            int linesIndex = 1;
+                            int soundIndex = 3;
+                            if (slists.size() == 6) {
+                                Node filed = slists.elementAt(1);
+                                if (filed instanceof TableColumn){
+                                    TableColumn column = (TableColumn)filed;
+//                                    System.out.println("column = " + column.getStringText());
+                                    lastFileds = new SoundFileds(column.getStringText());
+                                    ship.addSoundFileds(lastFileds);
+                                }
+                                linesIndex += 2;
+                                soundIndex += 2;
+                            }
+
+                            Node linesRow = slists.elementAt(linesIndex);
+                            ShipLines shipLines = null;
+                            String lines ="";
+                            if (linesRow instanceof TableColumn){
+                                String text = ((TableColumn)linesRow).getStringText();
+                                lines = handleText(text);
+                            }
+
+                            Node soundRow = slists.elementAt(soundIndex);
+                            if (soundRow instanceof TableColumn){
+                                TableColumn soundCol = ((TableColumn)soundRow);
+                                if (soundCol.getChildCount() >1 && soundCol.getChild(1) instanceof LinkTag){
+                                    LinkTag linkTag = (LinkTag) soundCol.getChild(1);
+                                    String href = linkTag.getLink();
+//                                    System.out.println("href = " + href);
+                                    //TODO fix the name of sound
+                                    Sound sound = new Sound("kougo", href);
+                                    shipLines = new ShipLines(lines, sound);
+                                    if (lastFileds != null){
+                                        lastFileds.addShipLines(shipLines);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
             }
-            //
-            // TextExtractingVisitor visitor = new TextExtractingVisitor();
-            //
-            // parser.visitAllNodesWith(visitor);
-            // String textInPage = visitor.getExtractedText();
-            // message(textInPage);
 
-            System.out.println("");
-            ;
+            System.out.println("ship = " + ship);
+
         } catch (ParserException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
+    }
+
+    private static String handleText(String text) {
+        String s = text;
+        if (text.contains("div")){
+            s = s.replaceAll("<([^>]*)>", "");
+            s = s.replaceAll("\n+", "\n");
+//            System.out.println("s = " + s);
+        } else if (text.contains("span")){
+            s = text.replaceAll("<br />", "\n");
+            s = s.replaceAll("<([^>]*)>", "");
+//            System.out.println("s = " + s);
+        }
+        return s;
     }
 
 }
