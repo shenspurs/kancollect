@@ -166,7 +166,10 @@ public class ParseShip {
                 Node soundNode = tables.elementAt(1);
                 for (int index = 0 ;index < tables.size();index++){
                     soundNode = tables.elementAt(index);
-                    if (soundNode.getText().contains("ˆDèaÕfÃ÷")){
+                    int count = soundNode.getChildren().size();
+                    System.out.println("count" + count);
+                    //TODO fix the function of find the sound node
+                    if (soundNode.getText().contains("mp3")){
                         break;
                     }
                 }
