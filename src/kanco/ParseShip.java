@@ -164,6 +164,12 @@ public class ParseShip {
             SoundFileds lastFileds = null;
             if (tables != null && tables.size() > 1) {
                 Node soundNode = tables.elementAt(1);
+                for (int index = 0 ;index < tables.size();index++){
+                    soundNode = tables.elementAt(index);
+                    if (soundNode.getText().contains("ˆDèaÕfÃ÷")){
+                        break;
+                    }
+                }
 
                 if (soundNode.getChildren() instanceof NodeList) {
                     NodeList lists = (NodeList) soundNode.getChildren();
@@ -175,15 +181,15 @@ public class ParseShip {
                         Node node = lists.elementAt(i);
                         if (node.getChildren() instanceof NodeList) {
                             NodeList slists = (NodeList) node.getChildren();
-                            // System.out.println("slists = " + slists);
+//                             System.out.println("slists = " + slists);
                             int linesIndex = 1;
                             int soundIndex = 3;
                             if (slists.size() == 6) {
                                 Node filed = slists.elementAt(1);
                                 if (filed instanceof TableColumn) {
                                     TableColumn column = (TableColumn) filed;
-                                    // System.out.println("column = " +
-                                    // column.getStringText());
+//                                     System.out.println("column = " +
+//                                     column.getStringText());
                                     lastFileds = new SoundFileds(column.getStringText());
                                     ship.addSoundFileds(lastFileds);
                                 }
@@ -205,7 +211,7 @@ public class ParseShip {
                                 if (soundCol.getChildCount() > 1 && soundCol.getChild(1) instanceof LinkTag) {
                                     LinkTag linkTag = (LinkTag) soundCol.getChild(1);
                                     String href = linkTag.getLink();
-                                    // System.out.println("href = " + href);
+//                                     System.out.println("href = " + href);
                                     // TODO fix the name of sound
                                     Sound sound = new Sound(file.getName().replaceAll("\\.html", ""), href);
                                     shipLines = new ShipLines(lines, sound);
@@ -248,6 +254,9 @@ public class ParseShip {
 //        parseShipSound(new File("Kongo.html"));
         ArrayList<kanShip> ships = (ArrayList<kanShip>) parseShips(new File("ships.html"));
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
+        
+        
+      
         for (int i = 0; i < ships.size(); i++) {
             kanShip ship = ships.get(i);
             final int shipIndex = ship.getShipIndex();
@@ -256,7 +265,7 @@ public class ParseShip {
             String url = ship.getShipUrl();
             //download html of all ships
 //            downloadFile(path,url);
-//            System.out.println(ship.getShipName());
+            System.out.println(shipIndex);
             kanShip tmpShip = parseShipSound(new File(path));
             ArrayList<SoundFileds> soundFileds = tmpShip.getSoundFileds();
             if (tmpShip != null ){
@@ -274,7 +283,7 @@ public class ParseShip {
                             
                             String name = lineUrl.substring(lastIndex + 1, lineUrl.length());
                             String soundPath = "sound\\" + shipIndex + "\\" +  name;
-                            System.out.println(soundPath);
+//                            System.out.println(soundPath);
                             //download the sounds of the ship
 
                             fixedThreadPool.execute(new Runnable() {
