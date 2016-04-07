@@ -3,10 +3,18 @@ package kanco;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,7 +95,6 @@ public class ParseShip {
                                     if (linkNode instanceof LinkTag){
                                         LinkTag linkTag = (LinkTag) linkNode;
                                         String str = linkTag.getChildrenHTML();
-                                        System.out.println(str);
                                         Pattern pattern = Pattern.compile("No\\.(\\d*)\\s(\\S*)");
                                         Matcher m = pattern.matcher(str);
                                         kanShip ship = new kanShip();
@@ -103,7 +110,7 @@ public class ParseShip {
                                             ship.setShipName(str);
                                         }
                                         ship.setShipUrl(linkTag.getLink());
-                                        System.out.println(ship);
+//                                        System.out.println(ship);
                                         ships.add(ship);
                                     }
                                 }
@@ -121,7 +128,7 @@ public class ParseShip {
             e.printStackTrace();
         }
 
-        return null;
+        return ships;
     }
     
     public static kanShip parseShipSound(File file) {
@@ -213,7 +220,7 @@ public class ParseShip {
                 }
             }
 
-            System.out.println("ship = " + ship);
+//            System.out.println("ship = " + ship);
 
         } catch (ParserException e) {
             e.printStackTrace();
@@ -237,8 +244,116 @@ public class ParseShip {
     }
     
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws MalformedURLException {
 //        parseShipSound(new File("Kongo.html"));
-        parseShips(new File("ships.html"));
+        ArrayList<kanShip> ships = (ArrayList<kanShip>) parseShips(new File("ships.html"));
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
+        for (int i = 0; i < ships.size(); i++) {
+            kanShip ship = ships.get(i);
+            final int shipIndex = ship.getShipIndex();
+            String path = "ships\\" + shipIndex + ".html";
+//            System.out.println(path);
+            String url = ship.getShipUrl();
+            //download html of all ships
+//            downloadFile(path,url);
+//            System.out.println(ship.getShipName());
+            kanShip tmpShip = parseShipSound(new File(path));
+            ArrayList<SoundFileds> soundFileds = tmpShip.getSoundFileds();
+            if (tmpShip != null ){
+                ship.setSoundFileds(tmpShip.getSoundFileds());
+            }
+            if (soundFileds != null){
+                for (int j =0 ,jSize = soundFileds.size();j < jSize;j++){
+                    ArrayList<ShipLines> shipLines = soundFileds.get(j).getShipLines();
+                    for (int k =0,kSize = shipLines.size();k< kSize;k++){
+                        Sound sound = shipLines.get(k).getSound();
+                        String line = shipLines.get(k).getLines();
+                        String lineUrl = sound.getmUrl();
+                        int lastIndex = lineUrl.lastIndexOf('/'); 
+                        if (lastIndex > 0){
+                            
+                            String name = lineUrl.substring(lastIndex + 1, lineUrl.length());
+                            String soundPath = "sound\\" + shipIndex + "\\" +  name;
+                            System.out.println(soundPath);
+                            //download the sounds of the ship
+
+                            fixedThreadPool.execute(new Runnable() {
+                                
+                                @Override
+                                public void run() {
+                                    try {
+//                                      System.out.println(soundPath);
+//                                      System.out.println(lineUrl);
+                                        downloadFile(soundPath, lineUrl);
+                                    } catch (MalformedURLException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                  
+                        }
+//                        System.out.println(sound);
+//                        System.out.println(line);
+                    }
+                }
+            }
+        }
+        System.out.println("end");
+        synchronized (urls) {
+            System.out.println(urls);
+        }
+        while (urls.size() > 0) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            synchronized (urls) {
+                System.out.println(urls);
+            }
+        }
+        fixedThreadPool.shutdown();
     }
+    
+    private static ArrayList<String> urls = new ArrayList<>();
+    public static void downloadFile(String path,String netUrl) throws MalformedURLException{
+        File file = new File(path);
+        if (file.exists()) {
+            return;
+        }
+        File parentFile = file.getParentFile();
+        if (parentFile != null && !parentFile.exists()){
+            parentFile.mkdirs();
+        }
+        URL url = new URL(netUrl);
+        int byteSum = 0;
+        int byteRead = 0;
+        synchronized (urls) {
+            urls.add(netUrl);
+        }
+        try {
+            URLConnection conn = url.openConnection();
+            InputStream inStream = conn.getInputStream();
+            FileOutputStream fs = new FileOutputStream(path);
+            
+            byte[] buffer = new byte[4096];
+            while ((byteRead = inStream.read(buffer)) != -1) {
+                byteSum += byteRead;
+//                System.out.println(byteSum);
+                fs.write(buffer,0,byteRead);
+            }
+            fs.close();
+            synchronized (urls) {
+                urls.remove(netUrl);
+            }
+        } catch (IOException e) {
+            System.out.println("error" + path);
+            System.out.println("error" + url);
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    
 }

@@ -21,6 +21,13 @@ public class kanShip implements Serializable {
     private String mShipUrl = "";
     private ArrayList<SoundFileds> mSoundFileds = new ArrayList<>();
 
+    public void setSoundFileds(ArrayList<SoundFileds> fileds){
+        mSoundFileds = fileds;
+    }
+
+    public ArrayList<SoundFileds> getSoundFileds(){
+        return mSoundFileds;
+    }
     public String getShipName(){
         return mShipName;
     }
