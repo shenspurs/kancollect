@@ -16,7 +16,31 @@ public class kanShip implements Serializable {
      * 
      */
     private static final long serialVersionUID = 9170497488725429472L;
+    private int mShipIndex = 1;
+    private String mShipName = "";
+    private String mShipUrl = "";
     private ArrayList<SoundFileds> mSoundFileds = new ArrayList<>();
+
+    public String getShipName(){
+        return mShipName;
+    }
+    public void setShipName(String name){
+        mShipName = name;
+    }
+    
+    public int getShipIndex(){
+        return mShipIndex;
+    }
+    public void setShipIndex(int index){
+        mShipIndex = index;
+    }
+
+    public String getShipUrl(){
+        return mShipUrl;
+    }
+    public void setShipUrl(String url){
+        mShipUrl = url;
+    }
 
     public void addSoundFileds(SoundFileds fileds) {
         mSoundFileds.add(fileds);
@@ -56,10 +80,17 @@ public class kanShip implements Serializable {
         in.close();
         System.out.print(newship);
     }
-
     @Override
     public String toString() {
-
-        return "kanShip [mSoundFileds=" + Arrays.toString(mSoundFileds.toArray()) + "]";
+        return "kanShip [mShipIndex=" + mShipIndex + ", mShipName=" + mShipName + ", mShipUrl=" + mShipUrl
+                + ", mSoundFileds=" +  Arrays.toString(mSoundFileds.toArray()) + "]";
     }
+
+//    @Override
+//    public String toString() {
+//
+//        return "kanShip [mSoundFileds=" + Arrays.toString(mSoundFileds.toArray()) + "]";
+//    }
+    
+    
 }
