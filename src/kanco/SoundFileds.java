@@ -22,6 +22,9 @@ public class SoundFileds implements Serializable {
         mFiledsName = name;
     }
 
+    public String getFiledName(){
+        return mFiledsName;
+    }
     public ArrayList<ShipLines> getShipLines(){
         return mShipLines;
     }

@@ -1,12 +1,17 @@
 package kanco;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -167,7 +172,6 @@ public class ParseShip {
                 for (int index = 0 ;index < tables.size();index++){
                     soundNode = tables.elementAt(index);
                     int count = soundNode.getChildren().size();
-                    System.out.println("count" + count);
                     //TODO fix the function of find the sound node
                     if (soundNode.getText().contains("mp3")){
                         break;
@@ -253,13 +257,12 @@ public class ParseShip {
     }
     
     
-    public static void main(String[] args) throws MalformedURLException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
 //        parseShipSound(new File("Kongo.html"));
         ArrayList<kanShip> ships = (ArrayList<kanShip>) parseShips(new File("ships.html"));
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
+//        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
         
-        
-      
+
         for (int i = 0; i < ships.size(); i++) {
             kanShip ship = ships.get(i);
             final int shipIndex = ship.getShipIndex();
@@ -268,13 +271,13 @@ public class ParseShip {
             String url = ship.getShipUrl();
             //download html of all ships
 //            downloadFile(path,url);
-            System.out.println(shipIndex);
+//            System.out.println(shipIndex);
             kanShip tmpShip = parseShipSound(new File(path));
             ArrayList<SoundFileds> soundFileds = tmpShip.getSoundFileds();
             if (tmpShip != null ){
                 ship.setSoundFileds(tmpShip.getSoundFileds());
             }
-            if (soundFileds != null){
+            if (soundFileds != null){/*
                 for (int j =0 ,jSize = soundFileds.size();j < jSize;j++){
                     ArrayList<ShipLines> shipLines = soundFileds.get(j).getShipLines();
                     for (int k =0,kSize = shipLines.size();k< kSize;k++){
@@ -286,47 +289,101 @@ public class ParseShip {
                             
                             String name = lineUrl.substring(lastIndex + 1, lineUrl.length());
                             String soundPath = "sound\\" + shipIndex + "\\" +  name;
-//                            System.out.println(soundPath);
+                            System.out.println(soundPath);
                             //download the sounds of the ship
 
-                            fixedThreadPool.execute(new Runnable() {
-                                
-                                @Override
-                                public void run() {
-                                    try {
-//                                      System.out.println(soundPath);
-//                                      System.out.println(lineUrl);
-                                        downloadFile(soundPath, lineUrl);
-                                    } catch (MalformedURLException e) {
-                                        // TODO Auto-generated catch block
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                  
+//                            fixedThreadPool.execute(new Runnable() {
+//                                
+//                                @Override
+//                                public void run() {
+//                                    try {
+////                                      System.out.println(soundPath);
+////                                      System.out.println(lineUrl);
+//                                        downloadFile(soundPath, lineUrl);
+//                                    } catch (MalformedURLException e) {
+//                                        // TODO Auto-generated catch block
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            });
+//                  
                         }
 //                        System.out.println(sound);
 //                        System.out.println(line);
                     }
                 }
+            */}
+        }
+//        System.out.println("end");
+//        synchronized (urls) {
+//            System.out.println(urls);
+//        }
+//        while (urls.size() > 0) {
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//            synchronized (urls) {
+//                System.out.println(urls);
+//            }
+//        }
+//        fixedThreadPool.shutdown();
+//        System.out.println(ships);
+        
+        
+        
+        
+      File file = new File("insert_shiplines.sql");
+      
+      BufferedWriter out =  new BufferedWriter(new FileWriter(file));
+      int count = 0;
+        for (kanShip ship:ships){
+            ArrayList<SoundFileds> fileds = ship.getSoundFileds();
+            for(SoundFileds filed: fileds){
+                ArrayList<ShipLines> shipLines = filed.getShipLines();
+                for(ShipLines line:shipLines){
+                    String name = ship.getShipName();
+                    String url = line.getSound().getmUrl();
+                    String taici = line.getLines();
+                    taici = taici.replaceAll("'", "''");
+                    String changjing = filed.getFiledName();
+//                    System.out.println("name = " + name + " url = " + url + " taici = " + taici + " changjing = " + changjing);
+                    String sql = "begin;\ninsert  into  shiplines (shipname,url,lines,soundfiled) values(" 
+                            +"'"+ name + "','" + url + "','" + taici + "','" + changjing + "');\n commit;" ;
+                    System.out.println(sql);
+                    out.write(sql);
+                }
             }
         }
-        System.out.println("end");
-        synchronized (urls) {
-            System.out.println(urls);
-        }
-        while (urls.size() > 0) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            synchronized (urls) {
-                System.out.println(urls);
-            }
-        }
-        fixedThreadPool.shutdown();
+//        File file = new File("test.obj");
+//        ObjectOutputStream out = null;
+//        out = new ObjectOutputStream(new FileOutputStream(file));
+//            try {
+//                out.writeObject(ships);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//        try {
+//            if (out != null){
+//                out.close();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        
+//        
+//        List<kanShip> readShips = new ArrayList<>();
+//        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+//        Object newship = null;
+//        Object obj = in.readObject();
+//        if (obj instanceof List<?>) {
+//            readShips = (List<kanShip>) obj;
+//        }
+//        in.close();
+//        System.out.print(readShips);
     }
     
     private static ArrayList<String> urls = new ArrayList<>();
