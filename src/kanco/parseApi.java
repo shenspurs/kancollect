@@ -39,6 +39,7 @@ public class parseApi {
             }
 //            System.out.println(str);
         }
+        reader.close();
 //        System.out.println(str);
     }
 }
